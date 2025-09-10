@@ -1,9 +1,9 @@
 #version 330 core
-out vec4 FragColor;
+in vec3 ourColor;
 
-uniform vec3 inColor;
+out vec4 color;
 
 void main()
 {
-    FragColor = vec4(inColor, 1.0);  // usa el color enviado desde C++
+	color = vec4(ourColor, 1.0f);
 }

@@ -77,30 +77,13 @@ public:
 		glAttachShader(this->Program, vertex);
 		glAttachShader(this->Program, fragment);
 		glLinkProgram(this->Program);
-
-		// Shader Program
-		this->Program = glCreateProgram();
-		glAttachShader(this->Program, vertex);
-		glAttachShader(this->Program, fragment);
-		glLinkProgram(this->Program);
-
-		// Activar el shader antes de obtener el uniforme
-		glUseProgram(this->Program);
-
-		// Obtener la ubicación del uniforme
-		uniformColor = glGetUniformLocation(this->Program, "miColorPersonal");
-
-
-
 		// Print linking errors if any
 		glGetProgramiv(this->Program, GL_LINK_STATUS, &success);
 		if (!success)
 		{
 			glGetProgramInfoLog(this->Program, 512, NULL, infoLog);
 			std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-
 		}
-
 		//le damos la localidad de color
 		uniformColor = glGetUniformLocation(this->Program, "color");
 		// Delete the shaders as they're linked into our program now and no longer necessery
