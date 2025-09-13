@@ -1,4 +1,4 @@
-//Previo 5
+//Practica 5
 //Juan Enrique Soria Palos
 //Fecha de entrega: 09/09/2025
 // 422015639
@@ -29,8 +29,9 @@ rot = 0.0f;
 //For model
 float	hombro = 0.0f,
 codo = 0.0f, muneca = 0.0f,
-dedo1 = 0.0f, dedo2 = 0.0f;
-
+dedo1 = 0.0f, dedo1b = 0.0f, dedo1c = 0.0f, //partes del dedo1 
+dedo1a = 0.0f, //Partes del dedo 2
+dedo2a = 0.0f, dedo2b= 0.0f; //Partes del dedo 4
 
 
 int main() {
@@ -44,7 +45,7 @@ int main() {
 
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Previo 5 Juan Soria", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Practica 5 Juan Soria", nullptr, nullptr);
 
 	int screenWidth, screenHeight;
 
@@ -253,7 +254,7 @@ int main() {
 
 		//Model dedo1 B
 		model = glm::translate(modelTemp, glm::vec3(0.5, 0.0, 0.0f));
-		model = glm::rotate(model, glm::radians(dedo2), glm::vec3(0.0f, 0.0, 1.0f));
+		model = glm::rotate(model, glm::radians(dedo1b), glm::vec3(0.0f, 0.0, 1.0f));
 		model = glm::translate(model, glm::vec3(0.5f, 0.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(1.0f, 0.3f, 0.25f));
 		color = glm::vec3(1.0f, 0.0f, 1.0f);
@@ -261,7 +262,120 @@ int main() {
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		glDrawArrays(GL_TRIANGLES, 0, 36);//E
 
-		glBindVertexArray(0);
+		//Model dedo1 C
+		model = glm::translate(modelTemp, glm::vec3(0.3, 0.0, 0.0f));
+		model = glm::rotate(model, glm::radians(dedo1c), glm::vec3(0.0f, 0.0, 1.0f));
+		model = glm::translate(model, glm::vec3(0.2f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.4f, 0.3f, 0.25f));
+		color = glm::vec3(0.5f, 0.5f, 1.0f);
+		glUniform3fv(uniformColor, 1, glm::value_ptr(color));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);//F 1
+
+
+		//Model 2
+		//Dedo 2 A
+		model = glm::translate(modelTemp2, glm::vec3(0.40, 0.35, 0.0f));
+		model = glm::rotate(model, glm::radians(dedo1a), glm::vec3(0.0f, 0.0, 1.0f));
+		modelTemp = model = glm::translate(model, glm::vec3(0.35f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(1.0f, 0.3f, 0.25f));
+		color = glm::vec3(0.0f, 1.0f, 1.0f);
+		glUniform3fv(uniformColor, 1, glm::value_ptr(color));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);//D3
+
+		//Model dedo2 C
+		model = glm::translate(modelTemp, glm::vec3(0.3, 0.0, 0.0f));
+		model = glm::rotate(model, glm::radians(dedo1c), glm::vec3(0.0f, 0.0, 1.0f));
+		model = glm::translate(model, glm::vec3(0.2f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.4f, 0.3f, 0.25f));
+		color = glm::vec3(0.5f, 0.5f, 1.0f);
+		glUniform3fv(uniformColor, 1, glm::value_ptr(color));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+		//Model dedo2 B
+		model = glm::translate(modelTemp, glm::vec3(0.5, 0.0, 0.0f));
+		model = glm::rotate(model, glm::radians(dedo1b), glm::vec3(0.0f, 0.0, 1.0f));
+		modelTemp = model = glm::translate(model, glm::vec3(0.5f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(1.0f, 0.3f, 0.25f));
+		color = glm::vec3(1.0f, 0.0f, 1.0f);
+		glUniform3fv(uniformColor, 1, glm::value_ptr(color));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		//Model Dedo3 A
+		model = glm::translate(modelTemp2, glm::vec3(0.40, 0.35, -0.38f));
+		model = glm::rotate(model, glm::radians(dedo1a), glm::vec3(0.0f, 0.0, 1.0f));
+		modelTemp = model = glm::translate(model, glm::vec3(0.35f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(1.0f, 0.3f, 0.25f));
+		color = glm::vec3(0.0f, 1.0f, 1.0f);
+		glUniform3fv(uniformColor, 1, glm::value_ptr(color));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		//Model Dedo3 C
+		model = glm::translate(modelTemp, glm::vec3(0.3, 0.0, 0.0f));
+		model = glm::rotate(model, glm::radians(dedo1c), glm::vec3(0.0f, 0.0, 1.0f));
+		model = glm::translate(model, glm::vec3(0.2f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.4f, 0.3f, 0.25f));
+		color = glm::vec3(0.5f, 0.5f, 1.0f);
+		glUniform3fv(uniformColor, 1, glm::value_ptr(color));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		//Model Dedo3 B
+		model = glm::translate(modelTemp, glm::vec3(0.5, 0.0, 0.0f));
+		model = glm::rotate(model, glm::radians(dedo1b), glm::vec3(0.0f, 0.0, 1.0f));
+		modelTemp = model = glm::translate(model, glm::vec3(0.5f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(1.0f, 0.3f, 0.25f));
+		color = glm::vec3(1.0f, 0.0f, 1.0f);
+		glUniform3fv(uniformColor, 1, glm::value_ptr(color));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+		//Model Dedo4 A
+		model = glm::translate(modelTemp2, glm::vec3(0.25f, -0.35f, -0.35f));
+		model = glm::rotate(model, glm::radians(dedo2a), glm::vec3(0.0f, -1.0, 0.3f));
+		modelTemp = model = glm::translate(model, glm::vec3(0.3f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.6f, 0.3f, 0.25f));
+		color = glm::vec3(0.0f, 1.0f, 1.0f);
+		glUniform3fv(uniformColor, 1, glm::value_ptr(color));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		//Model Dedo4 B
+		model = glm::translate(modelTemp, glm::vec3(0.3, 0.0, 0.0f));
+		model = glm::rotate(model, glm::radians(dedo2b), glm::vec3(0.0f, 1.0, -0.3f));
+		modelTemp = model = glm::translate(model, glm::vec3(0.2f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.4f, 0.3f, 0.25f));
+		color = glm::vec3(1.0f, 0.0f, 1.0f);
+		glUniform3fv(uniformColor, 1, glm::value_ptr(color));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		
+		//Model Dedo5 A
+		model = glm::translate(modelTemp2, glm::vec3(0.25f, -0.35f, 0.38f));
+		model = glm::rotate(model, glm::radians(dedo2a), glm::vec3(0.0f, -1.0, 0.3f));
+		modelTemp = model = glm::translate(model, glm::vec3(0.3f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.6f, 0.3f, 0.25f));
+		color = glm::vec3(0.0f, 1.0f, 1.0f);
+		glUniform3fv(uniformColor, 1, glm::value_ptr(color));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		//Model Dedo5 B
+		model = glm::translate(modelTemp, glm::vec3(0.3, 0.0, 0.0f));
+		model = glm::rotate(model, glm::radians(dedo2b), glm::vec3(-1.0f, -1.0, 0.0f));
+		modelTemp = model = glm::translate(model, glm::vec3(0.2f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.4f, 0.3f, 0.25f));
+		color = glm::vec3(1.0f, 0.0f, 1.0f);
+		glUniform3fv(uniformColor, 1, glm::value_ptr(color));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
 		// Swap the screen buffers
@@ -280,39 +394,73 @@ void Inputs(GLFWwindow* window) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)  //GLFW_RELEASE
 		glfwSetWindowShouldClose(window, true);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		movX += 0.008f;
+		movX += 0.0018f;
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		movX -= 0.008f;
+		movX -= 0.0018f;
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-		movY += 0.008f;
+		movY += 0.0018f;
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-		movY -= 0.008f;
+		movY -= 0.0018f;
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		movZ -= 0.008f;
+		movZ -= 0.0018f;
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		movZ += 0.008f;
+		movZ += 0.0018f;
 	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-		rot += 0.18f;
+		rot += 0.018f;
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-		rot -= 0.18f;
+		rot -= 0.018f;
 	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-		hombro += 0.18f;
+		if (hombro + 0.18 < 60.0f)
+			hombro += 0.18f;
 	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
-		hombro -= 0.18f;
+		if (hombro - 0.18 > -90.0f)
+			hombro -= 0.18f;
 	if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
-		codo += 0.18f;
+		if (codo + 0.18 < 135.0f)
+			codo += 0.18f;
 	if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
-		codo -= 0.18f;
+		if (codo - 0.18 > 0.0f)
+			codo -= 0.18f;
 	if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
-		muneca += 0.18f;
+		if (muneca + 0.18 < 89.0f)
+			muneca += 0.18f;
 	if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
-		muneca -= 0.18f;
+		if (muneca - 0.18 > -89.0f)
+			muneca -= 0.18f;
 	if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
-		dedo1 += 0.18f;
+		if (dedo1 + 0.18 < 15.0f)
+			dedo1 += 0.18f;
 	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
-		dedo1 -= 0.18f;
+		if (dedo1 - 0.18 > -15.0f)
+			dedo1 -= 0.18f;
+	if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
+		if (dedo1a + 0.18 < 15.0f)
+			dedo1a += 0.18f;
+	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
+		if (dedo1a - 0.18 > -15.0f)
+			dedo1a -= 0.18f;
 	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
-		dedo2 += 0.18f;
+		if (dedo1b + 0.18 < 0.0f)
+			dedo1b += 0.18f;
 	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
-		dedo2 -= 0.18f;
+		if (dedo1b - 0.18 > -55.0f)
+			dedo1b -= 0.18f;
+	if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+		if (dedo1c + 0.18 < 0.0f)
+			dedo1c += 0.18f;
+	if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
+		if (dedo1c - 0.18 > -45.0f)
+			dedo1c -= 0.18f;
+	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+		if (dedo2a + 0.18 < 30.0f)
+			dedo2a += 0.18f;
+	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+		if (dedo2a - 0.18 > -90.0f)
+			dedo2a -= 0.18f;
+	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+		if (dedo2b + 0.18 < 0.0f)
+			dedo2b += 0.18f;
+	if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)
+		if (dedo2b - 0.18 > -80.0f)
+			dedo2b -= 0.18f;
 }
