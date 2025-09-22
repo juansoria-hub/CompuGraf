@@ -1,6 +1,6 @@
-//Previo6
+//Practica 6
 //Soria Palos Juan Enrique
-//Fecha de entrega: 16/09/2025
+//Fecha de entrega: 21/09/2025
 //422025639
 
 // Std. Includes
@@ -59,7 +59,7 @@ int main( )
     glfwWindowHint( GLFW_RESIZABLE, GL_FALSE );
     
     // Create a GLFWwindow object that we can use for GLFW's functions
-    GLFWwindow *window = glfwCreateWindow( WIDTH, HEIGHT, "Previo 6 Juan Soria", nullptr, nullptr );
+    GLFWwindow *window = glfwCreateWindow( WIDTH, HEIGHT, "Practica 6 Juan Soria", nullptr, nullptr );
     
     if ( nullptr == window )
     {
@@ -100,7 +100,14 @@ int main( )
     
     // Load models
     //Model dog((char*)"Models/RedDog.obj");
-    Model Trex((char*)"Models/T-Rex.obj");
+    //Model Trex((char*)"Models/T-Rex.obj");
+    Model Fox((char*)"Models/Fox.obj");
+    Model Table((char*)"Models/Table.obj");
+    Model Cloth((char*)"Models/Cloth.obj");
+    Model Pizza((char*)"Models/Pizza.obj");
+    Model Lamp((char*)"Models/Lamp.obj");
+    Model Corgi((char*)"Models/Corgi.obj");
+    Model Floor((char*)"Models/Floor.obj");
     glm::mat4 projection = glm::perspective( camera.GetZoom( ), ( float )SCREEN_WIDTH/( float )SCREEN_HEIGHT, 0.1f, 100.0f );
     
   
@@ -128,15 +135,23 @@ int main( )
         glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
 
         // Draw the loaded model
-        /*glm::mat4 model(1);
-        glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));*/
-        glm::mat4 model(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -2.0f, 0.0f)); // mover un poco hacia abajo
-        model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));   // escalar (más chico si es muy grande)
+        glm::mat4 model(1);
         glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        //model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));   // escalar (más chico si es muy grande)
+        //glm::mat4 model(1.0f);
+        //model = glm::translate(model, glm::vec3(0.0f, -2.0f, 0.0f)); // mover un poco hacia abajo
+        //model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));   // escalar (más chico si es muy grande)
+        //glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
         //dog.Draw(shader);
-        Trex.Draw(shader);
+        //Trex.Draw(shader);
+        Fox.Draw(shader);
+        Table.Draw(shader);
+        Cloth.Draw(shader);
+        Pizza.Draw(shader);
+        Lamp.Draw(shader);
+        Corgi.Draw(shader);
+        Floor.Draw(shader);
 
         // Swap the buffers
         glfwSwapBuffers( window );
