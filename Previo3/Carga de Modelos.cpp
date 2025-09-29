@@ -1,6 +1,6 @@
-//Practica 6
+//Practica 7
 //Soria Palos Juan Enrique
-//Fecha de entrega: 21/09/2025
+//Fecha de entrega: 28/09/2025
 //422025639
 
 // Std. Includes
@@ -59,7 +59,7 @@ int main( )
     glfwWindowHint( GLFW_RESIZABLE, GL_FALSE );
     
     // Create a GLFWwindow object that we can use for GLFW's functions
-    GLFWwindow *window = glfwCreateWindow( WIDTH, HEIGHT, "Practica 6 Juan Soria", nullptr, nullptr );
+    GLFWwindow *window = glfwCreateWindow( WIDTH, HEIGHT, "Practica 7 Juan Soria", nullptr, nullptr );
     
     if ( nullptr == window )
     {
@@ -101,13 +101,14 @@ int main( )
     // Load models
     //Model dog((char*)"Models/RedDog.obj");
     //Model Trex((char*)"Models/T-Rex.obj");
-    Model Fox((char*)"Models/Fox.obj");
+    /*Model Fox((char*)"Models/Fox.obj");
     Model Table((char*)"Models/Table.obj");
     Model Cloth((char*)"Models/Cloth.obj");
     Model Pizza((char*)"Models/Pizza.obj");
     Model Lamp((char*)"Models/Lamp.obj");
     Model Corgi((char*)"Models/Corgi.obj");
-    Model Floor((char*)"Models/Floor.obj");
+    Model Floor((char*)"Models/Floor.obj");*/
+    Model Dado((char*)"Models/Dado.obj");
     glm::mat4 projection = glm::perspective( camera.GetZoom( ), ( float )SCREEN_WIDTH/( float )SCREEN_HEIGHT, 0.1f, 100.0f );
     
   
@@ -145,14 +146,14 @@ int main( )
 
         //dog.Draw(shader);
         //Trex.Draw(shader);
-        Fox.Draw(shader);
+        /*Fox.Draw(shader);
         Table.Draw(shader);
         Cloth.Draw(shader);
         Pizza.Draw(shader);
         Lamp.Draw(shader);
         Corgi.Draw(shader);
-        Floor.Draw(shader);
-
+        Floor.Draw(shader);*/
+        Dado.Draw(shader);
         // Swap the buffers
         glfwSwapBuffers( window );
     }

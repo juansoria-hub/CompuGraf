@@ -1,6 +1,6 @@
-//Previo 7
+//Practica 7
 //Soria Palos Juan Enrique
-//Fecha de entrega: 23/09/2025
+//Fecha de entrega: 28/09/2025
 //422015639
 
 #include <iostream>
@@ -61,7 +61,7 @@ int main()
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
 	// Create a GLFWwindow object that we can use for GLFW's functions
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Previo 7 Juan Soria", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Practica 7 Juan Soria", nullptr, nullptr);
 
 	if (nullptr == window)
 	{
@@ -156,7 +156,7 @@ int main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
 	// Diffuse map
-	image = stbi_load("images/Door.png", &textureWidth, &textureHeight, &nrChannels,0);
+	image = stbi_load("images/DiceWF.png", &textureWidth, &textureHeight, &nrChannels,0);
 	glBindTexture(GL_TEXTURE_2D, texture1);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 	glGenerateMipmap(GL_TEXTURE_2D);
