@@ -1,9 +1,8 @@
-//Previo8
+//Practica 8
 //Soria Palos Juan Enrique 
-//Fecha de entrega: 30/09/2025
+//Fecha de entrega: 12/10/2025
 //422015639
 
-// Std. Includes
 #include <string>
 
 // GLEW
@@ -41,14 +40,32 @@ bool keys[1024];
 GLfloat lastX = 400, lastY = 300;
 bool firstMouse = true;
 
+float angDia = 0.0f;                         // ángulo de la luz día (rad)
+float angNoche = glm::radians(180.0f);         // la noche arranca opuesta a la día
+
+float diaV = 1.5f;                        // radianes/seg (ajustable con teclas)
+float nocheV = 1.5f;
+
+float diaR = 18.5f;                        // radio de la órbita (X-Z)
+float nocheR = 18.5f;
+
+float verticalScale = 1.0f;                      // cuánto sube/baja en Y (hemisferio)
+glm::vec3 orbitCenter(0.0f, 0.0f, 0.0f);         // centro de la órbita
 
 // Light attributes
 glm::vec3 lightPos(0.5f, 0.5f, 2.5f);
 float movelightPos = 0.0f;
+glm::vec3 lightPos2(-1.5f, 1.0f, 1.0f);
+float movelightPos2 = 0.0f;
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
 float rot = 0.0f;
 bool activanim = false;
+bool dia = true;
+float tiltNightDeg = 90.0f;                 // rotación del plano de la órbita nocturna (°). 90 = transversal
+float nightRadiusFactor = 1.5f;             // “a mitad” del radio de la del día
+glm::vec3 tiltAxis = glm::vec3(0.0f, 0.0f, 1.0f); // eje de rotación del plano (X). Cambia a (0,0,1) si prefieres
+
 
 int main()
 {
@@ -62,7 +79,7 @@ int main()
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
     // Create a GLFWwindow object that we can use for GLFW's functions
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Previo8 Juan Soria", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Practica8 Juan Soria", nullptr, nullptr);
 
     if (nullptr == window)
     {
@@ -106,7 +123,6 @@ int main()
 
 
     // Load models
-    //Model red_dog((char*)"Models/RedDog.obj");
     Model Fox((char*)"Models/Fox.obj");
     Model Table((char*)"Models/Table.obj");
     Model Cloth((char*)"Models/Cloth.obj");
@@ -114,7 +130,8 @@ int main()
     Model Lamp((char*)"Models/Lamp.obj");
     Model Corgi((char*)"Models/Corgi.obj");
     Model Floor((char*)"Models/Floor.obj");
-
+    Model sun((char*)"Models/sun.obj");
+    Model moon((char*)"Models/moon.obj");
     glm::mat4 projection = glm::perspective(camera.GetZoom(), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 
     float vertices[] = {
@@ -177,7 +194,7 @@ int main()
 
     // Load textures
 
-    GLuint texture;
+    GLuint texture; 
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
     int textureWidth, textureHeight, nrChannels;
@@ -188,15 +205,7 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
 
-    //image = stbi_load("Models/Texture_albedo.jpg", &textureWidth, &textureHeight, &nrChannels, 0);
     image = stbi_load("Models/Fox_BaseColor.png", &textureWidth, &textureHeight, &nrChannels, 0);
-    image = stbi_load("Models/table.png", &textureWidth, &textureHeight, &nrChannels, 0);
-    image = stbi_load("Models/Korgi_diffuseOriginal.png", &textureWidth, &textureHeight, &nrChannels, 0);
-    image = stbi_load("Models/PIZZA.png", &textureWidth, &textureHeight, &nrChannels, 0);
-    image = stbi_load("Models/cloth final.png", &textureWidth, &textureHeight, &nrChannels, 0);
-    image = stbi_load("Models/Lamp01.4_AlbedoTransparency.png", &textureWidth, &textureHeight, &nrChannels, 0);
-    image = stbi_load("Models/floor.png", &textureWidth, &textureHeight, &nrChannels, 0);
-
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     glGenerateMipmap(GL_TEXTURE_2D);
     if (image)
@@ -218,6 +227,8 @@ int main()
         GLfloat currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+        angDia = fmod(angDia + diaV * deltaTime, glm::two_pi<float>());
+        angNoche = fmod(angNoche + nocheV * deltaTime, glm::two_pi<float>());
 
         // Check and call events
         glfwPollEvents();
@@ -227,68 +238,123 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        
+
+        // >>> REEMPLAZA EL BLOQUE DE LUCES EN EL RENDER LOOP (ANTES DE DIBUJAR MODELOS)
         lightingShader.Use();
-        GLint lightPosLoc = glGetUniformLocation(lightingShader.Program, "light.position");
+
         GLint viewPosLoc = glGetUniformLocation(lightingShader.Program, "viewPos");
-        glUniform3f(lightPosLoc, lightPos.x + movelightPos, lightPos.y + movelightPos, lightPos.z + movelightPos);
         glUniform3f(viewPosLoc, camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
 
+        // Usaremos solo 1 luz activa (la "día" o la "noche")
+        glUniform1i(glGetUniformLocation(lightingShader.Program, "numLights"), 1);
 
-        // Set lights properties
-        glUniform3f(glGetUniformLocation(lightingShader.Program,"light.ambient"),0.3f,0.2f,0.1f);
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "light.diffuse"), 0.8f, 0.5f, 0.2f);
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "light.specular"), 1.0f, 0.8f, 0.5f);
+        glm::vec3 L1 = orbitCenter + glm::vec3(
+            diaR * cos(angDia),
+            diaR * sin(angDia),
+            15.0f  // Z ahora es fijo
+        );
 
+        glm::mat4 Rnight = glm::rotate(glm::mat4(1.0f), glm::radians(tiltNightDeg), glm::normalize(tiltAxis));
 
+        // vector base en el mismo formato que L1 (antes de rotar el plano)
+        glm::vec4 vNight(
+            (nocheR * nightRadiusFactor) * cos(angNoche),
+            verticalScale * (nocheR * nightRadiusFactor) * sin(angNoche),
+            (nocheR * nightRadiusFactor) * sin(angNoche),
+            1.0f
+        );
 
+        // rotamos ese vector para “inclinar” el plano de la órbita
+        vNight = Rnight * vNight;
+
+        // Creamos un nuevo centro para la órbita de la luna, desplazado 8 unidades a la izquierda.
+        glm::vec3 moonOrbitCenter = orbitCenter + glm::vec3(-10.0f, 0.0f, 0.0f);
+        glm::vec3 L2 = moonOrbitCenter + glm::vec3(vNight);
+
+        if (dia) {
+            // LUZ DÍA: blanca más intensa (conserva “el color” original pero sube potencia)
+            glUniform3fv(glGetUniformLocation(lightingShader.Program, "lights[0].position"), 1, glm::value_ptr(L1));
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "lights[0].ambient"), 0.30f, 0.28f, 0.25f);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "lights[0].diffuse"), 1.20f, 1.10f, 1.00f);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "lights[0].specular"), 1.00f, 0.90f, 0.80f);
+        }
+        else {
+            // LUZ NOCHE: azulada
+            glUniform3fv(glGetUniformLocation(lightingShader.Program, "lights[0].position"), 1, glm::value_ptr(L2));
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "lights[0].ambient"), 0.05f, 0.10f, 0.20f);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "lights[0].diffuse"), 0.30f, 0.50f, 1.00f);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "lights[0].specular"), 0.40f, 0.60f, 1.00f);
+        }
+
+        // (lo demás de matrices y material se queda igual)
         glm::mat4 view = camera.GetViewMatrix();
         glUniformMatrix4fv(glGetUniformLocation(lightingShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(glGetUniformLocation(lightingShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
 
-        // Set material properties
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "material.ambient"), 0.2f, 0.2f, 0.2f);
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "material.diffuse"), 1.0f, 1.0f, 1.0f);
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "material.specular"), 0.6f, 0.6f, 0.6f);
-        glUniform1f(glGetUniformLocation(lightingShader.Program, "material.shininess"), 16.0f);
-
-
-
+        // Material (igual que ya lo tienes)
+        glUniform3f(glGetUniformLocation(lightingShader.Program, "material.ambient"), 0.8f, 0.8f, 0.8f);
+        glUniform3f(glGetUniformLocation(lightingShader.Program, "material.diffuse"), 0.5f, 0.5f, 0.5f);
+        glUniform3f(glGetUniformLocation(lightingShader.Program, "material.specular"), 0.2f, 0.2f, 0.1f);
+        glUniform1f(glGetUniformLocation(lightingShader.Program, "material.shininess"), 32.0f);
 
 
         // Draw the loaded model
-        glm::mat4 model(1);
-        model = glm::scale(model, glm::vec3(3.0f, 3.0f, 3.0f));
+        // --- Fox ---
+        glm::mat4 model = glm::mat4(1.0f);
         glUniformMatrix4fv(glGetUniformLocation(lightingShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        glBindVertexArray(VAO);
-        //red_dog.Draw(lightingShader);
-
-
         Fox.Draw(lightingShader);
-        Table.Draw(lightingShader);
-        Cloth.Draw(lightingShader);
-        Pizza.Draw(lightingShader);
-        Lamp.Draw(lightingShader);
+
+        // --- Corgi ---
+        glm::mat4 model2 = glm::mat4(1.0f);
+        glUniformMatrix4fv(glGetUniformLocation(lightingShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model2));
         Corgi.Draw(lightingShader);
+
+        // --- Table ---
+        glm::mat4 model3 = glm::mat4(1.0f);
+        glUniformMatrix4fv(glGetUniformLocation(lightingShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model3));
+        Cloth.Draw(lightingShader);
+
+        // --- Pizza ---
+        glm::mat4 model4 = glm::mat4(1.0f);
+        glUniformMatrix4fv(glGetUniformLocation(lightingShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model4));
+        Pizza.Draw(lightingShader);
+
+        // --- Lamp ---
+        glm::mat4 model5 = glm::mat4(1.0f);
+
+        glUniformMatrix4fv(glGetUniformLocation(lightingShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model5));
+        Lamp.Draw(lightingShader);
+
+        // --- Floor ---
+        glm::mat4 model6 = glm::mat4(1.0f);
+        glUniformMatrix4fv(glGetUniformLocation(lightingShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model6));
         Floor.Draw(lightingShader);
 
-        //glDrawArrays(GL_TRIANGLES, 0, 36);
-        
-
         glBindVertexArray(0);
-
 
 
 
         lampshader.Use();
         glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, lightPos + movelightPos);
-        model = glm::scale(model, glm::vec3(0.3f));
-        glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        glm::mat4 lampM = glm::mat4(1.0f);
+
+        // Dibuja SOLO la lámpara correspondiente al modo activo
+        if (dia) {
+            lampM = glm::translate(glm::mat4(1.0f), L1);
+            //lampM = glm::scale(lampM, glm::vec3(0.2f));  // ajusta escala a tu .obj
+            glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "model"), 1, GL_FALSE, glm::value_ptr(lampM));
+            sun.Draw(lampshader);
+        }
+        else {
+            lampM = glm::translate(glm::mat4(1.0f), L2);
+            //lampM = glm::scale(lampM, glm::vec3(0.2f));  // ajusta escala a tu .obj
+            glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "model"), 1, GL_FALSE, glm::value_ptr(lampM));
+            moon.Draw(lampshader);
+        }
+
+
         glBindVertexArray(0);
 
         // Swap the buffers
@@ -354,17 +420,25 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode
             keys[key] = false;
         }
     }
-
+    if (key == GLFW_KEY_M && action == GLFW_PRESS) {
+        dia = !dia;
+    }
     if (keys[GLFW_KEY_O])
     {
-       
-        movelightPos += 0.1f;
+
+        diaV += 0.10f * deltaTime * 2;
     }
 
     if (keys[GLFW_KEY_L])
     {
-        
-        movelightPos -= 0.1f;
+
+        diaV = glm::max(0.0f, diaV - 0.10f * deltaTime);
+    }
+    if (keys[GLFW_KEY_I]) {
+        nocheV += 0.10f * deltaTime * 2;
+    }
+    if (keys[GLFW_KEY_K]) {
+        nocheV = glm::max(0.0f, nocheV - 0.10f * deltaTime);
     }
 
 
@@ -387,5 +461,3 @@ void MouseCallback(GLFWwindow* window, double xPos, double yPos)
 
     camera.ProcessMouseMovement(xOffset, yOffset);
 }
-
-
