@@ -1,6 +1,6 @@
-//Previo 10
+//Practica 10
 //Juan Enrique Soria Palos
-//Fecha de entrega: 21/10/2025
+//Fecha de entrega: 27/10/2025
 //422015639
 
 
@@ -108,6 +108,18 @@ glm::vec3 Light1 = glm::vec3(0);
 //Anim
 float rotBall = 0; //
 bool AnimBall = false;
+bool AnimDog = false;
+float rotDog = 0;
+
+// Variables para la animación de "golpe"
+bool isHitAnimationActive = false;     // Está la animación de golpe activa
+float hitAnimationTimer = 0.0f;        // Cronómetro para la animación
+float const HIT_ANIMATION_DURATION = 1.0f; // Duración total (1 segundo)
+
+// Variables para guardar los desplazamientos de la animación
+float dogJumpOffsetY = 0.0f;   // El Y extra del perro (brinco)
+float dogPitchOffset = 0.0f;   // La rotación X extra del perro (mirada)
+float ballHitOffsetY = 0.0f;   // El Y extra de la pelota (golpe)
 
 
 // Deltatime
@@ -126,7 +138,7 @@ int main()
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);*/
 
 	// Create a GLFWwindow object that we can use for GLFW's functions
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Previo 10 Juan Soria", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Practica 10 Juan Soria", nullptr, nullptr);
 
 	if (nullptr == window)
 	{
@@ -291,24 +303,52 @@ int main()
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		Piso.Draw(lightingShader);
 
-		model = glm::mat4(1);
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+		// --- CÓDIGO PARA EL PERRO (Dog) ---
+		model = glm::mat4(1); // Reiniciamos la matriz
 		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 0);
+
+		// 1. Definimos el radio de la órbita
+		float dogRadius = 2.0f;
+
+		// 2. Calculamos la posición X y Z en el círculo
+		// Usamos -rotDog para que gire en sentido horario (como tu glm::vec3(0.0f, -1.0f, 0.0f))
+		float dogX = dogRadius * cos(glm::radians(-rotDog));
+		float dogZ = dogRadius * sin(glm::radians(-rotDog));
+
+		// 3. Trasladamos el perro a esa posición
+		model = glm::translate(model, glm::vec3(dogX, dogJumpOffsetY, dogZ));
+
+		// 4. (Opcional) Rotamos el perro para que "mire" hacia donde se mueve (tangente)
+		// Ajusta el '-90.0f' si tu modelo mira hacia otra dirección por defecto
+		model = glm::rotate(model, glm::radians(rotDog +180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::rotate(model, glm::radians(dogPitchOffset), glm::vec3(1.0f, 0.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		Dog.Draw(lightingShader);
 
-		model = glm::mat4(1);
-		glEnable(GL_BLEND);//Avtiva la funcionalidad para trabajar el canal alfa
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+		// --- CÓDIGO PARA LA PELOTA (Ball) ---
+		model = glm::mat4(1); // Reiniciamos la matriz
+		glEnable(GL_BLEND);
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 1);
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, -2.0f)); // aleja del eje
-		model = glm::rotate(model, glm::radians(rotBall), glm::vec3(0.5f, 0.0f, 0.0f));
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 2.0f)); // regresa al eje
+
+		// 1. Definimos el radio de la órbita
+		float ballRadius = 2.0f; // Un radio diferente para que no choquen
+
+		// 2. Calculamos la posición X y Z en el círculo
+		// Usamos +rotBall para que gire en sentido anti-horario (como tu glm::vec3(0.0f, 1.0f, 0.0f))
+		float ballX = ballRadius * cos(glm::radians(rotBall));
+		float ballZ = ballRadius * sin(glm::radians(rotBall));
+
+		float ballBaseHeight = 1.5f;
+
+		// 3. Trasladamos la pelota a esa posición
+		model = glm::translate(model, glm::vec3(ballX, ballBaseHeight + ballHitOffsetY, ballZ));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-	    Ball.Draw(lightingShader); 
-		glDisable(GL_BLEND);  //Desactiva el canal alfa 
+		Ball.Draw(lightingShader);
+		//glDisable(GL_BLEND); 
 		glBindVertexArray(0);
-	
 
 		// Also draw the lamp object, again binding the appropriate shader
 		lampShader.Use();
@@ -447,18 +487,74 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode
 	if (keys[GLFW_KEY_N])
 	{
 		AnimBall = !AnimBall;
+		AnimDog = !AnimDog;
 		
 	}
 }
 void Animation() {
+	// --- 1. Animación de Órbita (la que ya tenías) ---
 	if (AnimBall)
 	{
-		rotBall += 0.1f;
-		//printf("%f", rotBall);
+		float rotationSpeed = 30.0f;
+		rotBall += rotationSpeed * deltaTime;
+		rotDog += rotationSpeed * deltaTime;
+
+		// Reseteamos los ángulos para evitar que crezcan infinitamente (overflow)
+		if (rotBall > 360.0f) rotBall -= 360.0f;
+		if (rotDog > 360.0f) rotDog -= 360.0f;
 	}
-	else
-	{
-		//rotBall = 0.0f;
+
+	// --- 2. Detección de Colisión (Angular) ---
+
+	// Como giran en direcciones opuestas (rotBall y -rotDog) a la misma velocidad,
+	// se cruzarán cuando rotBall esté cerca de 0 grados y 180 grados.
+	float collisionCheckAngle = fmod(rotBall, 170.0f);
+	float collisionThreshold = 10.0f; // Una "ventana" de 10 grados para detectar
+
+	// Están en rango de colisión si están a 10 grados de 0 o a 10 grados de 180
+	bool collisionDetected = (collisionCheckAngle < collisionThreshold) || (collisionCheckAngle > (180.0f - collisionThreshold));
+
+
+	// --- 3. Manejo de Estado de la Animación de Golpe ---
+
+	// Si detectamos colisión y la animación NO estaba activa, la iniciamos.
+	if (collisionDetected && !isHitAnimationActive) {
+		isHitAnimationActive = true;
+		hitAnimationTimer = 0.0f; // Reiniciamos el cronómetro
+	}
+
+	// Si la animación está activa, la actualizamos
+	if (isHitAnimationActive) {
+		hitAnimationTimer += deltaTime; // Avanzamos el cronómetro
+
+		if (hitAnimationTimer <= HIT_ANIMATION_DURATION) {
+			// Calculamos el progreso (de 0.0 a 1.0)
+			float animationProgress = hitAnimationTimer / HIT_ANIMATION_DURATION;
+
+			// Usamos sin(progreso * PI). Esto hace una curva perfecta:
+			// 0 -> 1 -> 0 durante el tiempo de la animación.
+			float bounceFactor = sin(animationProgress * glm::pi<float>());
+
+			// 1. Perro brinca (Y): max 1.0 de altura
+			float maxJumpHeight = 1.0f;
+			dogJumpOffsetY = bounceFactor * maxJumpHeight;
+
+			// 2. Perro mira arriba/abajo (Pitch X): max 25 grados
+			float maxPitch = -30.0f;
+			dogPitchOffset = bounceFactor * maxPitch;
+
+			// 3. Pelota baja (Y): max -0.5 (hacia abajo)
+			float maxHitDepth = -0.5f;
+			ballHitOffsetY = bounceFactor * maxHitDepth;
+		}
+		else {
+			// La animación terminó
+			isHitAnimationActive = false;
+			hitAnimationTimer = 0.0f;
+			dogJumpOffsetY = 0.0f;
+			dogPitchOffset = 0.0f;
+			ballHitOffsetY = 0.0f;
+		}
 	}
 }
 
