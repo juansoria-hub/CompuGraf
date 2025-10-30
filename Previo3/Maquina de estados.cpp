@@ -1,6 +1,6 @@
-//Previo 11
+﻿//Practica 11
 //Juan Enrique Soria Palos
-// fecha de entrega: 28/10/2025
+//fecha de entrega: 30/10/2025
 // 422015639
 
 #include <iostream>
@@ -136,7 +136,7 @@ int main()
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);*/
 
 	// Create a GLFWwindow object that we can use for GLFW's functions
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Previo11 Juan Soria", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Practica11 Juan Soria", nullptr, nullptr);
 
 	if (nullptr == window)
 	{
@@ -511,44 +511,102 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode
 	}
 }
 void Animation() {
-	if (AnimBall)
-	{
-		rotBall += 0.4f;
-		//printf("%f", rotBall);
-	}
-	
-	if (AnimDog)
-	{
-		rotDog -= 0.6f;
-		//printf("%f", rotBall);
-	}
-	if (dogAnim == 1) { //walk 
-		if (!step) {
-			RLegs += 0.3f;
-			FLegs += 0.3f;
-			head += 0.3f;
-			tail += 0.3f;
-			if (RLegs > 15.0f)
-				step = true;
-		}
-		else
-		{
-			RLegs -= 0.3f;
-			FLegs -= 0.3f;
-			head -= 0.3f;
-			tail -= 0.3f;
-			if (RLegs < -15.0)
-				step = false;
-		}
-		dogPos.z += 0.001;
-		if (dogPos.z > 2.3f) //Validacion para que se detenga
-		{					// antes de que termine el piso.
-			dogAnim = 0;
-		}
+	static int state = 0;
+	static float targetRot = 0.0f;
+	static bool rotating = false;
 
+	// --- Movimiento de patas, cabeza, cola ---
+	if (dogAnim == 1) {
+		if (!step) {
+			RLegs += 0.3f; FLegs += 0.3f; head += 0.3f; tail += 0.3f;
+			if (RLegs > 15.0f) step = true;
+		}
+		else {
+			RLegs -= 0.3f; FLegs -= 0.3f; head -= 0.3f; tail -= 0.3f;
+			if (RLegs < -15.0f) step = false;
+		}
 	}
-	
+
+	// --- Máquina de estados con dirección invertida ---
+	switch (state) {
+	case 0: // Caminar hacia +Z (igual que antes)
+		dogPos.z += 0.001f;
+		dogAnim = 1;
+		if (dogPos.z > 2.3f) {
+			state = 1;
+			rotating = true;
+			targetRot = 90.0f; // Ahora gira a la derecha (+X)
+		}
+		break;
+
+	case 1: // Rotación hacia +X
+		if (rotating) {
+			if (dogRot < targetRot) dogRot += 0.5f;
+			else { rotating = false; dogRot = targetRot; }
+		}
+		else {
+			dogPos.x += 0.001f; // Avanza hacia +X
+			if (dogPos.x > 2.3f) {
+				state = 2;
+				rotating = true;
+				targetRot = 180.0f; // Ahora gira hacia +Z negativa (hacia atrás)
+			}
+		}
+		break;
+
+	case 2: // Caminar hacia -Z
+		if (rotating) {
+			if (dogRot < targetRot) dogRot += 0.5f;
+			else { rotating = false; dogRot = targetRot; }
+		}
+		else {
+			dogPos.z -= 0.001f;
+			if (dogPos.z < -2.3f) {
+				state = 3;
+				rotating = true;
+				targetRot = 315.0f; // Gira en diagonal hacia el centro (-X +Z)
+			}
+		}
+		break;
+
+	case 3: // Caminar en diagonal hacia el centro (-X +Z)
+		if (rotating) {
+			// Queremos que gire suavemente hacia el sentido opuesto (a la derecha)
+			if (dogRot < targetRot) dogRot += 0.5f;
+			else if (dogRot > targetRot) dogRot -= 0.5f;
+
+			// Ajuste para manejar la envoltura de ángulos (evita el salto)
+			if (fabs(fmod(dogRot - targetRot + 540.0f, 360.0f) - 180.0f) < 0.5f) {
+				rotating = false;
+				dogRot = targetRot;
+			}
+		}
+		else {
+			dogPos.x -= 0.0007f;
+			dogPos.z += 0.0007f;
+			if (dogPos.z > 0.0f && dogPos.x < 0.1f) {
+				state = 4;
+				rotating = true;
+				targetRot = 0.0f; // Mirar de nuevo hacia enfrente (+Z)
+			}
+		}
+		break;
+
+
+	case 4: // Regreso al inicio
+		if (rotating) {
+			if (dogRot > targetRot) dogRot -= 0.5f;
+			else { rotating = false; dogRot = targetRot; }
+		}
+		else {
+			dogPos = glm::vec3(0.0f, 0.0f, 0.0f);
+			state = 0; // Reinicia ciclo
+		}
+		break;
+	}
 }
+
+
 
 void MouseCallback(GLFWwindow *window, double xPos, double yPos)
 {
