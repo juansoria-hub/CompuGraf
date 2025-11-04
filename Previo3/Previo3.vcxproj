@@ -21,6 +21,10 @@
   <ItemGroup>
     <ClInclude Include="..\Shader.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="stb_image.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="KeyFrames.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shader\lamp.frag" />
@@ -29,9 +33,6 @@
     <None Include="Shader\lighting.vs" />
     <None Include="Shader\modelLoading.frag" />
     <None Include="Shader\modelLoading.vs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Maquina de estados.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
