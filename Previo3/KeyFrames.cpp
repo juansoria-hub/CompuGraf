@@ -1,9 +1,11 @@
-//Previo 12
-// Juan Enrique Soria Palos
-//Fecha de entrega: 04/11/2025
+﻿//Practica 12
+//Juan Enrique Soria Palos
+//Fecha de entrega: 09/11/2025
 //422025639
 
 #include <iostream>
+#include <fstream>   // NUEVO
+#include <string>
 #include <cmath>
 
 // GLEW
@@ -145,6 +147,9 @@ FRAME KeyFrame[MAX_FRAMES];
 int FrameIndex = 0;			//introducir datos
 bool play = false;
 int playIndex = 0;
+int repeatCount = 0;      // NUEVO - Contador de repeticiones
+const int maxRepeats = 5; // NUEVO - Número de veces que se repetirá la animación 
+
 
 void saveFrame(void)
 {
@@ -189,6 +194,51 @@ void interpolation(void)
 	KeyFrame[playIndex].RLegsInc = (KeyFrame[playIndex + 1].RLegs - KeyFrame[playIndex].RLegs) / i_max_steps;
 }
 
+// ======================= NUEVO =========================
+void guardarAnimacion() {
+	std::ofstream archivo("animacion.txt");
+	if (!archivo.is_open()) {
+		std::cout << "Error al guardar animacion.txt" << std::endl;
+		return;
+	}
+
+	archivo << FrameIndex << std::endl;
+	for (int i = 0; i < FrameIndex; i++) {
+		archivo << KeyFrame[i].dogPosX << " "
+			<< KeyFrame[i].dogPosY << " "
+			<< KeyFrame[i].dogPosZ << " "
+			<< KeyFrame[i].rotDog << " "
+			<< KeyFrame[i].head << " "
+			<< KeyFrame[i].FLegs << " "
+			<< KeyFrame[i].RLegs << std::endl;
+	}
+
+	archivo.close();
+	std::cout << "Animacion guardada correctamente en animacion.txt" << std::endl;
+}
+
+bool cargarAnimacion() {
+	std::ifstream archivo("animacion.txt");
+	if (!archivo.is_open()) {
+		std::cout << "No se encontro animacion.txt, se generará en esta ejecucion." << std::endl;
+		return false;
+	}
+
+	archivo >> FrameIndex;
+	for (int i = 0; i < FrameIndex; i++) {
+		archivo >> KeyFrame[i].dogPosX
+			>> KeyFrame[i].dogPosY
+			>> KeyFrame[i].dogPosZ
+			>> KeyFrame[i].rotDog
+			>> KeyFrame[i].head
+			>> KeyFrame[i].FLegs
+			>> KeyFrame[i].RLegs;
+	}
+	archivo.close();
+	std::cout << "Animacion cargada desde animacion.txt con " << FrameIndex << " keyframes." << std::endl;
+	return true;
+}
+// =======================================================
 
 
 // Deltatime
@@ -207,7 +257,7 @@ int main()
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);*/
 
 	// Create a GLFWwindow object that we can use for GLFW's functions
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Previo12 Juan Soria", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Practica12 Juan Soria", nullptr, nullptr);
 
 	if (nullptr == window)
 	{
@@ -278,6 +328,11 @@ int main()
 		KeyFrame[i].RLegs = 0;
 		KeyFrame[i].RLegsInc = 0;
 	}
+
+
+	// ======================= NUEVO =========================
+	bool animacionCargada = cargarAnimacion();
+	// =======================================================
 
 
 	// First, set the container's VAO (and VBO)
@@ -493,7 +548,12 @@ int main()
 		glfwSwapBuffers(window);
 	}
 
-	
+	// ======================= NUEVO =========================
+	if (!animacionCargada && FrameIndex > 0) {
+		guardarAnimacion();
+	}
+	// =======================================================
+
 	
 
 	// Terminate GLFW, clearing any resources allocated by GLFW.
@@ -664,6 +724,24 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode
 
 	}
 
+	// ======================= NUEVO =========================
+	if (keys[GLFW_KEY_Z]) {
+		if (FrameIndex > 1) {
+			resetElements();
+			interpolation();
+			play = true;
+			playIndex = 0;
+			i_curr_steps = 0;
+			repeatCount = 0;
+			std::cout << "Reproduciendo animacion cargada..." << std::endl;
+		}
+		else {
+			std::cout << "No hay animacion cargada para reproducir." << std::endl;
+		}
+	}
+	// =======================================================
+
+
 	if (keys[GLFW_KEY_K])
 	{
 		if (FrameIndex < MAX_FRAMES)
@@ -712,25 +790,38 @@ void Animation() {
 
 	if (play)
 	{
-		if (i_curr_steps >= i_max_steps) //end of animation between frames?
+		if (i_curr_steps >= i_max_steps) // ¿Terminó la interpolación entre frames?
 		{
 			playIndex++;
-			if (playIndex > FrameIndex - 2)	//end of total animation?
+			if (playIndex > FrameIndex - 2)	// ¿Terminó la animación completa?
 			{
-				printf("termina anim\n");
-				playIndex = 0;
-				play = false;
+				repeatCount++;  // Contar una repetición
+				printf("Termino la animacion (%d/%d)\n", repeatCount, maxRepeats);
+
+				if (repeatCount < maxRepeats) {
+					// ✅ Reiniciar para repetir
+					playIndex = 0;
+					i_curr_steps = 0;
+					resetElements();     // Restablece a la posición inicial
+					interpolation();     // Calcula incrementos otra vez
+					play = true;         // Sigue reproduciendo
+				}
+				else {
+					// Se completaron todas las repeticiones
+					play = false;
+					repeatCount = 0;
+					printf("Animacion completada %d veces.\n", maxRepeats);
+				}
 			}
-			else //Next frame interpolations
+			else // Interpolación entre el siguiente par de frames
 			{
-				i_curr_steps = 0; //Reset counter
-				//Interpolation
+				i_curr_steps = 0;
 				interpolation();
 			}
 		}
 		else
 		{
-			//Draw animation
+			// Avanza la animación según los incrementos calculados
 			dogPosX += KeyFrame[playIndex].incX;
 			dogPosY += KeyFrame[playIndex].incY;
 			dogPosZ += KeyFrame[playIndex].incZ;
@@ -738,14 +829,13 @@ void Animation() {
 			rotDog += KeyFrame[playIndex].rotDogInc;
 			head += KeyFrame[playIndex].headInc;
 			FLegs += KeyFrame[playIndex].FlegsInc;
-			RLegs += KeyFrame[playIndex].RLegsInc; 
+			RLegs += KeyFrame[playIndex].RLegsInc;
 
 			i_curr_steps++;
 		}
-
 	}
-	
 }
+
 
 void MouseCallback(GLFWwindow *window, double xPos, double yPos)
 {
